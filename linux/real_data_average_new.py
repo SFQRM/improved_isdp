@@ -345,7 +345,7 @@ def best_balance_parameter_for_aggregation(data,number_of_points = 50,number_dat
 
 #def load_data(f="./data/OP_DTL_GNRL_PGYR2019_P06302020_dataset.csv",index = 0,number_data=100):
 
-def load_data(f="../data/machine.data", index=6,number_data=100):
+def load_data(f="../data/Beidou-TLE.data", index=6,number_data=100):
     data = []
     data_file = open(f, "r")
     line = data_file.readline()
@@ -354,7 +354,7 @@ def load_data(f="../data/machine.data", index=6,number_data=100):
         # print "line:",line
         line.replace('\n', "")
         line.strip()
-        eachline = line.split(",")[6]
+        eachline = line.split(",")[3]
         # print "eachline:",eachline
         data.append(float(eachline))
         line = data_file.readline()
@@ -363,6 +363,11 @@ def load_data(f="../data/machine.data", index=6,number_data=100):
             break
     # print  data
     return data  # 返回数据为双列表形式
+
+
+def split_data(listTemp, sub_list_number = 20):
+    for i in range(0, len(listTemp), sub_list_number):
+        yield listTemp[i:i + sub_list_number]
 
 
 
@@ -374,9 +379,18 @@ def load_data(f="../data/machine.data", index=6,number_data=100):
 # number_of_number = 100
 # data = np.random.normal(mean, standard_deviation, number_of_number)
 
-data_loaded = load_data(f='../data/machine.data',index=0,number_data=209);
+# data_loaded = load_data(f='../data/machine.data',index=0,number_data=209);
+# 加载数据集Beidou-TLE.data
+data_loaded = load_data(f='../data/Beidou-TLE.data',index=0,number_data=100);
+
+# 切分数据集，
+data_segment = list(split_data(data_loaded, 20))
 print "data_loaded:",data_loaded
-data = data_loaded
+print "data_segment:",data_segment
+# data = data_loaded
+data = data_segment[0]
+
+print "data:",data
 #
 # # constant = best_balance_parameter(data,20)
 # constant = best_balance_parameter(data,40,len(data_loaded))
