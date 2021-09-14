@@ -37,7 +37,7 @@ np.set_printoptions(formatter={'float': '{: 0.10f}'.format})
 # experiment for private budget
 # sample and aggreation mechainsm
 ####################################################################
-def sample_aggreation(data,epsilon = 1.0,delta = 0.00001,number_of_partition = 5,beta = 0.5):
+def sample_aggreation(data,epsilon = 1.0,delta = 0.00001,number_of_partition = 5,beta = 0.5, B=5):
     # number_of_partition = 5
     # beta = 0.5
     # epsilon = 1.0
@@ -72,7 +72,8 @@ def sample_aggreation(data,epsilon = 1.0,delta = 0.00001,number_of_partition = 5
     # print "smooth_sensitivity:", smooth_sensitivity
 
     real_result = np.average(data)
-    noise_result = np.average(z_array) + np.true_divide(local_sensitivity, alpha_1) * np.random.laplace(0, 1)
+    # noise_result = np.average(z_array) + np.true_divide(local_sensitivity, alpha_1) * np.random.laplace(0, 1)
+    noise_result = np.average(z_array) + B*np.true_divide(local_sensitivity, alpha_1) * np.random.laplace(0, 1)
     # print "real_result:", real_result
     # print "noise_result:", noise_result
     return noise_result,real_result
@@ -87,7 +88,7 @@ def sample_aggreation(data,epsilon = 1.0,delta = 0.00001,number_of_partition = 5
 # number of sampel = 5
 ####################################################################
 
-def personalized_sample_aggregation(data, epsilon=1.0, delta=0.00001, number_of_partition=5, beta=0.5, constant=2.0):
+def personalized_sample_aggregation(data, epsilon=1.0, delta=0.00001, number_of_partition=5, beta=0.5, constant=2.0, B=5):
     # number_of_partition = 5
     # beta = 0.5
     # epsilon = 1.0
@@ -139,7 +140,8 @@ def personalized_sample_aggregation(data, epsilon=1.0, delta=0.00001, number_of_
     # print "smooth_sensitivity:", smooth_sensitivity
 
     real_result = np.average(data)
-    noise_result = np.average(z_array) + np.true_divide(local_sensitivity, alpha_1) * np.random.laplace(0, 1)
+    # noise_result = np.average(z_array) + (*********)*np.true_divide(local_sensitivity, alpha_1) * np.random.laplace(0, 1)
+    noise_result = np.average(z_array) + B * np.true_divide(local_sensitivity, alpha_1) * np.random.laplace(0, 1)
     # print "real_result:", real_result
     # print "noise_result:", noise_result
     return noise_result, real_result
@@ -168,6 +170,13 @@ def personlized_sample(data, epsilon=1.0, delta=0.00001, number_of_partition=1, 
     sample_probability = [0 for a in record_sensitivity]
     for round in np.arange(0, len(record_sensitivity), 1):
         if record_sensitivity[round] > constant:
+            """
+            print "****************************************************"
+            # print 1 - np.exp(epsilon)
+            print record_sensitivity[round]
+            print constant
+            print 1 - np.exp(epsilon * np.true_divide(record_sensitivity[round], constant))
+            """
             sample_probability[round] = np.true_divide((1 - np.exp(epsilon)), (
                     1 - np.exp(epsilon * np.true_divide(record_sensitivity[round], constant))))
         else:
@@ -216,7 +225,8 @@ def best_balance_parameter(data,number_of_points = 50,number_data=100):
     min = np.min(record_sensitivity)
     if min<0 or min ==0 :
         min = 0.01
-    c_array = np.linspace(min, np.max(record_sensitivity), number_of_points)
+    # c_array = np.linspace(min, np.max(record_sensitivity), number_of_points)
+    c_array = np.linspace(min, np.average(record_sensitivity), number_of_points)
     # c_array = np.linspace(0.5,2.5, number_of_points)
     # print "c_array",c_array
     # epsilon_array = np.hstack((np.linspace(0.01,0.1,10),np.linspace(0.1,0.5,5)))
@@ -286,7 +296,8 @@ def best_balance_parameter_for_aggregation(data,number_of_points = 50,number_dat
     min = np.min(record_sensitivity)
     if min<0 or min ==0 :
         min = 0.01
-    c_array = np.linspace(min, np.max(record_sensitivity), number_of_points)
+    # c_array = np.linspace(min, np.max(record_sensitivity), number_of_points)
+    c_array = np.linspace(min, np.average(record_sensitivity), number_of_points)
     # c_array = np.linspace(0.5,2.5, number_of_points)
     # print "c_array",c_array
     # epsilon_array = np.hstack((np.linspace(0.01,0.1,10),np.linspace(0.1,0.5,5)))
@@ -304,7 +315,7 @@ def best_balance_parameter_for_aggregation(data,number_of_points = 50,number_dat
         for index2 in np.arange(0,len(c_array[0]),1):
             tmp_error = 0
             for count in np.arange(0, loop, 1):
-                tmp = personalized_sample_aggregation(data, epsilon=epsilon_array[index1][index2], constant=c_array[index1][index2])
+                tmp = personalized_sample_aggregation(data, epsilon=epsilon_array[index1][index2], constant=c_array[index1][index2], B=B_n_1)
                 tmp_error = tmp_error + np.square(np.abs(tmp[0] - tmp[1]))
             # print "tmp_error:",tmp_error
             error[index1][index2] = np.sqrt(np.true_divide(tmp_error, loop))
@@ -345,7 +356,8 @@ def best_balance_parameter_for_aggregation(data,number_of_points = 50,number_dat
 
 #def load_data(f="./data/OP_DTL_GNRL_PGYR2019_P06302020_dataset.csv",index = 0,number_data=100):
 
-def load_data(f="../data/Beidou-TLE.data", index=6,number_data=100):
+# def load_data(f="../data/Beidou-TLE.data", index=6,number_data=100):
+def load_data(f="../data/test.data", index=6, number_data=100):
     data = []
     data_file = open(f, "r")
     line = data_file.readline()
@@ -354,7 +366,8 @@ def load_data(f="../data/Beidou-TLE.data", index=6,number_data=100):
         # print "line:",line
         line.replace('\n', "")
         line.strip()
-        eachline = line.split(",")[3]
+        # eachline = line.split(",")[3]
+        eachline = line.split(",")[0]
         # print "eachline:",eachline
         data.append(float(eachline))
         line = data_file.readline()
@@ -381,16 +394,22 @@ def split_data(listTemp, sub_list_number = 20):
 
 # data_loaded = load_data(f='../data/machine.data',index=0,number_data=209);
 # 加载数据集Beidou-TLE.data
-data_loaded = load_data(f='../data/Beidou-TLE.data',index=0,number_data=100);
+# data_loaded = load_data(f='../data/Beidou-TLE.data',index=0,number_data=100);
+data_loaded = load_data(f='../data/test.data',index=0,number_data=100);
 
 # 切分数据集，
 data_segment = list(split_data(data_loaded, 20))
 print "data_loaded:",data_loaded
 print "data_segment:",data_segment
 # data = data_loaded
+
 data = data_segment[0]
 
-print "data:",data
+segment_number = len(data_segment)
+# 计算Bn-1
+B_n_1 = np.sqrt(np.random.beta(a=1, b=segment_number))
+
+# print "data:",data
 #
 # # constant = best_balance_parameter(data,20)
 # constant = best_balance_parameter(data,40,len(data_loaded))
@@ -412,7 +431,8 @@ c_array_aggregation = np.loadtxt(path + "real_average_c_array.txt")
 error_aggregation = np.loadtxt(path + "real_average_error.txt" )
 
 path = "../figure/best_balance_parameter_average/"
-number_data = 209
+# number_data = 209
+number_data = 100
 epsilon_array = np.loadtxt(path + "real_average_epsilon.txt" + str(number_data))
 c_array = np.loadtxt(path + "real_average_c_array.txt" + str(number_data))
 error = np.loadtxt(path + "real_average_error.txt" + str(number_data))
@@ -434,12 +454,12 @@ for index_1 in np.arange(0,len(privacy_array),1):
     constant_aggregation = c_array_aggregation[index_1][index_c_aggregation]
     for index_2 in np.arange(0,number_repeate,1):
         # print "sample and aggreation:"
-        tmp = sample_aggreation(data,epsilon=privacy_array[index_1])
+        tmp = sample_aggreation(data,epsilon=privacy_array[index_1],B=B_n_1)
         result_sample_aggreation[index_1] += np.square(np.abs(tmp[0] - tmp[1]))
         # print "result of sample_aggreation:", tmp
 
         # print "personlized sample 1 time:"
-        tmp = personalized_sample_aggregation(data, epsilon=privacy_array[index_1], constant=constant_aggregation)
+        tmp = personalized_sample_aggregation(data, epsilon=privacy_array[index_1], constant=constant_aggregation, B=B_n_1)
         result_personalized_sample_aggregation[index_1] += np.square(np.abs(tmp[0] - tmp[1]))
         # print "personlized_sample_aggreation_1:", tmp
 
